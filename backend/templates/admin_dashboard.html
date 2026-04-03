@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+
+    <!-- Prevent cache + back button -->
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- HEADER -->
+    <div class="header">
+        <h1>Admin Dashboard</h1>
+
+        <button onclick="logoutUser()"
+                style="background:#ff4d4d; color:white; border:none;
+                       padding:8px 18px; border-radius:8px; cursor:pointer;">
+            Logout
+        </button>
+    </div>
+
+    <!-- USERS SECTION -->
+    <div class="card" style="margin-top:20px;">
+        <h3>All Users</h3>
+        <table id="userTable" style="width:100%; border-collapse:collapse;"></table>
+    </div>
+
+    <!-- EXPENSES SECTION -->
+    <div class="card" style="margin-top:20px;">
+        <h3>All Expenses</h3>
+        <table id="expenseTable" style="width:100%; border-collapse:collapse;"></table>
+    </div>
+
+</div>
+
+<script src="/static/script.js"></script>
+
+<script>
+
+loadAdminData();
+
+function loadAdminData() {
+
+    // -------- USERS --------
+    fetch("/admin/users")
+    .then(res => res.json())
+    .then(data => {
+
+        let table = `
+            <tr style="background:#222; color:white;">
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Action</th>
+            </tr>
+        `;
+
+        data.forEach(user => {
+            table += `
+                <tr>
+                    <td>${user[0]}</td>
+                    <td>${user[1]}</td>
+                    <td>${user[2]}</td>
+                    <td>
+                        <button onclick="deleteUser(${user[0]})"
+                                style="background:#ff4d4d; color:white; border:none;
+                                       padding:5px 10px; border-radius:5px; cursor:pointer;">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        document.getElementById("userTable").innerHTML = table;
+    });
+
+
+    // -------- EXPENSES --------
+    fetch("/admin/expenses")
+    .then(res => res.json())
+    .then(data => {
+
+        let table = `
+            <tr style="background:#222; color:white;">
+                <th>ID</th>
+                <th>User</th>
+                <th>Category</th>
+                <th>Amount</th>
+                <th>Date</th>
+                <th>Action</th>
+            </tr>
+        `;
+
+        data.forEach(exp => {
+            table += `
+                <tr>
+                    <td>${exp[0]}</td>
+                    <td>${exp[1]}</td>
+                    <td>${exp[2]}</td>
+                    <td>₹ ${exp[3]}</td>
+                    <td>${exp[4]}</td>
+                    <td>
+                        <button onclick="deleteExpense(${exp[0]})"
+                                style="background:#ff4d4d; color:white; border:none;
+                                       padding:5px 10px; border-radius:5px; cursor:pointer;">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        document.getElementById("expenseTable").innerHTML = table;
+    });
+}
+
+function deleteUser(id) {
+    fetch(`/admin/delete-user/${id}`, { method: "DELETE" })
+    .then(() => loadAdminData());
+}
+
+function deleteExpense(id) {
+    fetch(`/admin/delete-expense/${id}`, { method: "DELETE" })
+    .then(() => loadAdminData());
+}
+
+</script>
+
+<!-- Block Back/Forward -->
+<script>
+    history.pushState(null, null, location.href);
+    window.onpopstate = function () {
+        history.go(1);
+    };
+</script>
+
+</body>
+</html>

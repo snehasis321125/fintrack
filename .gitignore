@@ -1,0 +1,60 @@
+*.pyc
+__pycache__/
+*.pyo
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtualenvs
+.venv/
+venv/
+ENV/
+env/
+.ENV/
+
+# Databases
+database.db
+backend/database.db
+
+# ML Models (regenerate)
+backend/trained_models/
+trained_models/
+
+# Datasets
+backend/expenses_dataset.csv
+
+# Logs
+*.log
+
+# Runtime
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.cache
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

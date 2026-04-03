@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Prevent caching -->
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+</head>
+<body>
+
+<div class="container">
+
+    <!-- HEADER -->
+    <div class="header">
+        <div>
+            <h1>AI-Powered Expense Tracker</h1>
+            <p id="userGreeting" style="color:#aaa;">Welcome back!</p>
+            <p style="color:#aaa;">Smart insights &amp; spending predictions</p>
+        </div>
+
+        <div style="display:flex; gap:10px; align-items:center;">
+            <button onclick="openModal()" class="add-btn">
+                + Add Expense
+            </button>
+            
+            <a href="/profile" class="profile-btn" title="My Profile" style="display:inline-block; width:40px; height:40px; border-radius:50%; overflow:hidden; text-decoration:none;">
+                <img src="{{ profile.profile_photo or '/static/fintrack-logo.png' }}" alt="Profile" style="width:100%; height:100%; object-fit:cover;">
+            </a>
+
+            <button onclick="logoutUser()"
+                    style="background:#ff4d4d; color:white; border:none;
+                           padding:10px 18px; border-radius:8px; cursor:pointer;">
+                Logout
+            </button>
+        </div>
+    </div>
+
+    <!-- SUMMARY CARDS -->
+    <div class="cards">
+
+        <div class="card">
+            <h3>Total Spent</h3>
+            <h2 id="totalSpent">₹0</h2>
+            <div class="progress-bar">
+                <div id="budgetBar"></div>
+            </div>
+            <small id="budgetPercent">0% of budget</small>
+        </div>
+
+        <div class="card">
+            <h3>Budget Remaining</h3>
+            <h2 id="remainingBudget">₹0</h2>
+            <small>Available this month</small>
+        </div>
+
+        <div class="card">
+            <h3>Today's Spending</h3>
+            <h2 id="todaySpent">₹0</h2>
+            <small>Today</small>
+        </div>
+
+        <div class="card">
+            <h3>Monthly Budget</h3>
+            <h2 id="monthlyBudget">₹0</h2>
+            <button onclick="setBudget()" class="add-btn" style="margin-top:10px;">
+                Set Budget
+            </button>
+        </div>
+
+    </div>
+
+    <!-- MAIN GRID -->
+    <div class="grid">
+
+        <!-- LEFT SIDE -->
+        <div>
+
+            <div class="card">
+                <h3>Last 7 Days Spending</h3>
+                <canvas id="lineChart"></canvas>
+            </div>
+
+            <div class="card" style="margin-top:20px;">
+                <h3>Recent Transactions</h3>
+                <ul id="transactionList" style="list-style:none; padding:0;"></ul>
+            </div>
+
+        </div>
+
+        <!-- RIGHT SIDE -->
+        <div>
+
+            <div class="card">
+                <h3>By Category</h3>
+                <canvas id="pieChart"></canvas>
+            </div>
+
+            <div class="card" style="margin-top:20px;">
+                <h3>AI Predictions</h3>
+
+                <p><strong>Predicted Next Month:</strong></p>
+                <h2 id="predictedTotal">₹0</h2>
+                
+                <p><strong>Next Week:</strong></p>
+                <h2 id="predictedWeek">₹0</h2>
+
+                <div style="margin-top:15px;">
+                    <p id="trendInfo">Spending trend: --</p>
+                    <p id="savingPrediction">Predicted savings: ₹0</p>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ADD EXPENSE MODAL -->
+<div id="expenseModal" style="display:none; position:fixed; top:30%; left:50%; transform:translateX(-50%); background:#111; padding:25px; border-radius:12px; box-shadow:0 0 20px rgba(0,255,200,0.3); color:white;">
+    <h3>Add Expense</h3>
+
+    <select id="category" style="width:100%; padding:8px; margin-bottom:12px; background:#222; color:white; border:1px solid #00ffc3; border-radius:6px;">
+        <option value="">Select Category</option>
+        <option value="Food &amp; Dining">Food &amp; Dining</option>
+        <option value="Bills &amp; Utilities">Bills &amp; Utilities</option>
+        <option value="Shopping">Shopping</option>
+        <option value="Transport">Transport</option>
+        <option value="Health">Health</option>
+        <option value="Education">Education</option>
+        <option value="Entertainment">Entertainment</option>
+        <option value="Other">Other</option>
+    </select>
+
+    <input id="amount" type="number" placeholder="Amount" style="width:100%; padding:8px; margin-bottom:12px; background:#222; color:white; border:1px solid #00ffc3; border-radius:6px;">
+
+    <input id="date" type="date" style="width:100%; padding:8px; margin-bottom:12px; background:#222; color:white; border:1px solid #00ffc3; border-radius:6px;">
+
+    <div style="display:flex; gap:10px;">
+        <button onclick="addExpense()" style="flex:1; padding:8px 15px; background:#00ffc3; border:none; border-radius:6px; cursor:pointer;">
+            Save
+        </button>
+
+        <button onclick="closeModal()" style="flex:1; padding:8px 15px; background:#333; color:white; border:none; border-radius:6px; cursor:pointer;">
+            Cancel
+        </button>
+    </div>
+    </div>
+
+<!-- PROFILE MODAL -->
+<div id="profileModal" style="display:none; position:fixed; top:20%; left:50%; transform:translateX(-50%); background:#111; padding:30px; border-radius:12px; box-shadow:0 0 30px rgba(59,130,246,0.4); color:white; width:450px; max-width:90vw; z-index:1001;">
+    <h3>My Profile</h3>
+    <img id="profilePreview" src="" style="width:100px; height:100px; border-radius:50%; object-fit:cover; margin:15px 0; display:none; border:3px solid #3b82f6;">
+    
+    <input type="file" id="profilePhoto" accept="image/*" style="width:100%; padding:10px; margin-bottom:15px; background:#222; color:white; border:1px solid #3b82f6; border-radius:6px;">
+    
+    <input id="profileFirstName" type="text" placeholder="First Name" style="width:100%; padding:12px; margin-bottom:10px; background:#222; color:white; border:1px solid #3b82f6; border-radius:8px;">
+    <input id="profileLastName" type="text" placeholder="Last Name" style="width:100%; padding:12px; margin-bottom:15px; background:#222; color:white; border:1px solid #3b82f6; border-radius:8px;">
+    
+    <input id="profileEmail" type="email" placeholder="Email" style="width:100%; padding:12px; margin-bottom:20px; background:#222; color:white; border:1px solid #3b82f6; border-radius:8px;">
+    
+    <div style="display:flex; gap:10px;">
+        <button onclick="updateProfile()" style="flex:1; padding:12px; background:#3b82f6; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">
+            Save Changes
+        </button>
+        <button onclick="closeProfileModal()" style="flex:1; padding:12px; background:#333; color:white; border:none; border-radius:8px; cursor:pointer;">
+            Cancel
+        </button>
+    </div>
+</div>
+
+<!-- EDIT EXPENSE MODAL -->
+<div id="editModal" style="display:none; position:fixed; top:25%; left:50%; transform:translateX(-50%); background:#111; padding:30px; border-radius:12px; box-shadow:0 0 25px rgba(255,165,0,0.4); color:white; width:400px; max-width:90vw;">
+    <h3 id="editTitle">Edit Expense</h3>
+    <input type="hidden" id="editExpenseId">
+    
+    <select id="editCategory" style="width:100%; padding:12px; margin-bottom:15px; background:#222; color:white; border:1px solid #ffa500; border-radius:8px;">
+        <option value="">Select Category</option>
+        <option value="Food &amp; Dining">Food &amp; Dining</option>
+        <option value="Bills &amp; Utilities">Bills &amp; Utilities</option>
+        <option value="Shopping">Shopping</option>
+        <option value="Transport">Transport</option>
+        <option value="Health">Health</option>
+        <option value="Education">Education</option>
+        <option value="Entertainment">Entertainment</option>
+        <option value="Other">Other</option>
+    </select>
+
+    <input id="editAmount" type="number" placeholder="Amount" style="width:100%; padding:12px; margin-bottom:15px; background:#222; color:white; border:1px solid #ffa500; border-radius:8px;">
+    
+    <input id="editDate" type="date" style="width:100%; padding:12px; margin-bottom:20px; background:#222; color:white; border:1px solid #ffa500; border-radius:8px;">
+
+    <div style="display:flex; gap:10px;">
+        <button onclick="saveEdit()" style="flex:1; padding:12px; background:#ffa500; color:black; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">
+            Update
+        </button>
+        <button onclick="closeEditModal()" style="flex:1; padding:12px; background:#ff4d4d; color:white; border:none; border-radius:8px; cursor:pointer;">
+            Cancel
+        </button>
+    </div>
+</div>
+
+<script src="/static/script.js"></script>
+
+<script>
+    history.pushState(null, null, location.href);
+    window.onpopstate = function () {
+        history.go(1);
+    };
+</script>
+
+</body>

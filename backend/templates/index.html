@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Login</title>
+    <link rel="stylesheet" href="/static/style.css">
+
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+            /* HD matching gradient */
+            background: linear-gradient(135deg, #0b172a 0%, #1e293b 50%, #0f172a 100%);
+            color: #f8fafc;
+        }
+
+        /* ---------- LOGO ---------- */
+        .logo-container {
+            position: fixed;
+            top: 20px;
+            left: 30px;
+            z-index: 1000;
+        }
+
+        .logo-container img {
+            height: 70px;
+            filter: drop-shadow(0 4px 12px rgba(16,185,129,0.3));
+        }
+
+        /* ---------- CARD ---------- */
+        .card {
+            width: 420px;
+            background: linear-gradient(145deg, rgba(30,41,59,0.95), rgba(15,23,42,0.95));
+            backdrop-filter: blur(20px);
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(16,185,129,0.15);
+            border: 1px solid rgba(34,197,94,0.2);
+            color: #f8fafc;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #10b981, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 16px;
+            border-radius: 12px;
+            border: 2px solid rgba(34,197,94,0.3);
+            background: rgba(31,41,55,0.8);
+            color: #f8fafc;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #10b981;
+            box-shadow: 0 0 20px rgba(16,185,129,0.3);
+        }
+
+        input::placeholder {
+            color: #94a3b8;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border-radius: 25px;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .login-btn {
+            background: #1f6aa5;
+            color: white;
+        }
+
+        .register-btn {
+            background: #2fa36a;
+            color: white;
+        }
+
+        .admin-btn {
+            background: #6f42c1;
+            color: white;
+        }
+
+        .toggle-text {
+            text-align: center;
+            margin-top: 12px;
+            color: #1f6aa5;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        #auth-message {
+            text-align: center;
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- LOGO -->
+<div class="logo-container">
+    <img src="/static/fintrack-logo.png" alt="FinTrack Logo">
+</div>
+
+<div class="card">
+
+    <!-- LOGIN FORM -->
+    <div id="loginForm">
+        <h2>Welcome Back to FinTrack</h2>
+
+        <input id="login_email" placeholder="Email">
+        <input id="login_password" type="password" placeholder="Password">
+
+        <button class="login-btn" onclick="loginUser()">Login</button>
+
+        <div class="toggle-text" onclick="showRegister()">
+            Don't have an account? Create one
+        </div>
+
+        <button class="admin-btn" onclick="goToAdmin()">Admin Login</button>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div id="registerForm" style="display:none;">
+        <h2>Create Account</h2>
+
+        <input id="reg_name" placeholder="Full Name">
+        <input id="reg_email" placeholder="Email">
+        <input id="reg_password" type="password" placeholder="Password">
+
+        <button class="register-btn" onclick="registerUser()">Register</button>
+
+        <div class="toggle-text" onclick="showLogin()">
+            Already have an account? Login
+        </div>
+    </div>
+
+    <p id="auth-message"></p>
+
+</div>
+
+<script src="/static/script.js"></script>
+</body>
+</html>
