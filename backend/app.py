@@ -9,7 +9,14 @@ from expense import add_expense
 from model import predict_expenses, train_model_for_user
 
 from apscheduler.schedulers.background import BackgroundScheduler
+from flask import Flask
+import os
 
+app = Flask(__name__)
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
 
 # ---------------- APP CONFIG ---------------- #
 
