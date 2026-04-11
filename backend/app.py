@@ -1,27 +1,17 @@
 from flask import Flask, request, jsonify, render_template, session, redirect, url_for
 from flask_cors import CORS
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
+from apscheduler.schedulers.background import BackgroundScheduler
 
 from auth import register_user, login_user, get_user_profile, update_user_profile, change_user_password
 from db import get_connection, init_db
-from expense import add_expense
+from expense import add_expense, update_expense, delete_expense
 from model import predict_expenses, train_model_for_user
-
-from apscheduler.schedulers.background import BackgroundScheduler
-from flask import Flask
-import os
-
-app = Flask(__name__)
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
 
 # ---------------- APP CONFIG ---------------- #
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
 app = Flask(
     __name__,
     template_folder=os.path.join(BASE_DIR, "templates"),
@@ -31,28 +21,6 @@ app = Flask(
 app.secret_key = "fintrack_secure_session_key"
 CORS(app)
 
-
-# ---------------- DAILY MODEL RETRAIN ---------------- #
-
-def retrain_all_models():
-
-    print("Starting daily ML retraining...")
-
-    conn = get_connection()
-    c = conn.cursor()
-
-    c.execute("SELECT id FROM users")
-    users = c.fetchall()
-
-    conn.close()
-
-    for user in users:
-        train_model_for_user(user[0])
-
-    print("Daily ML retraining completed.")
-
-
-# ---------------- FRONTEND ROUTES ---------------- #
 
 @app.route("/")
 def home():
@@ -192,29 +160,39 @@ def dashboard_data():
         if monthly_budget else 0
     )
 
-    # last 7 days
+    # last 7 days data
+    seven_days_ago = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
+
+    # Recent transactions (all in last 7 days)
     c.execute("""
         SELECT id, amount, date, category
         FROM expenses
-        WHERE user_id = ?
+        WHERE user_id = ? AND date >= ?
         ORDER BY date DESC
-        LIMIT 7
-    """, (user_id,))
+    """, (user_id, seven_days_ago))
+    recent_transactions = c.fetchall()
 
-    last_week = c.fetchall()
-
-    # categories
+    # Categories spending last 7 days
     c.execute("""
         SELECT category, SUM(amount)
         FROM expenses
-        WHERE user_id = ?
+        WHERE user_id = ? AND date >= ?
         GROUP BY category
-    """, (user_id,))
+    """, (user_id, seven_days_ago))
+    categories_7days = c.fetchall()
 
-    categories = c.fetchall()
+    # Daily sums for line chart (last 7 days)
+    c.execute("""
+        SELECT date, SUM(amount) as daily_total
+        FROM expenses
+        WHERE user_id = ? AND date >= ?
+        GROUP BY date
+        ORDER BY date ASC
+    """, (user_id, seven_days_ago))
+    daily_sums_7days = c.fetchall()
 
     c.execute("SELECT name FROM users WHERE id = ?", (user_id,))
-    user_name = c.fetchone()[0]
+    user_name = c.fetchone()[0] or "User"
 
     conn.close()
 
@@ -224,8 +202,9 @@ def dashboard_data():
         "monthly_budget": monthly_budget,
         "remaining_budget": remaining_budget,
         "budget_percentage": round(budget_percentage, 2),
-        "last_week": last_week,
-        "categories": categories,
+        "recent_transactions": recent_transactions,
+        "categories_7days": categories_7days,
+        "daily_sums_7days": daily_sums_7days,
         "user": {
             "id": user_id,
             "name": user_name
@@ -309,10 +288,6 @@ def add():
     train_model_for_user(session["user"])
 
     return response
-
-from expense import update_expense, delete_expense
-
-
 
 # ---------------- UPDATE EXPENSE ---------------- #
 
@@ -462,6 +437,26 @@ def delete_expense(expense_id):
     return jsonify({"status": "deleted"})
 
 
+# ---------------- DAILY MODEL RETRAIN ---------------- #
+
+def retrain_all_models():
+
+    print("Starting daily ML retraining...")
+
+    conn = get_connection()
+    c = conn.cursor()
+
+    c.execute("SELECT id FROM users")
+    users = c.fetchall()
+
+    conn.close()
+
+    for user in users:
+        train_model_for_user(user[0])
+
+    print("Daily ML retraining completed.")
+
+
 # ---------------- MAIN ---------------- #
 
 if __name__ == "__main__":
@@ -478,4 +473,4 @@ if __name__ == "__main__":
 
     print("Server starting...")
 
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=False, threaded=True)

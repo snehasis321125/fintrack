@@ -1,6 +1,7 @@
 import sqlite3
 
-conn = sqlite3.connect('database.db')
+from db import DB_PATH
+conn = sqlite3.connect(DB_PATH)
 conn.execute("PRAGMA foreign_keys = ON")
 c = conn.cursor()
 
